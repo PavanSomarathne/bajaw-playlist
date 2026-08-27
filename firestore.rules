@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function validSong(data) {
+      return data.keys().hasAll([
+          'title', 'singer', 'chordUrl', 'beat', 'position', 'favorite',
+          'createdAt', 'updatedAt', 'updatedBy'
+        ])
+        && data.keys().hasOnly([
+          'title', 'singer', 'chordUrl', 'beat', 'position', 'favorite',
+          'createdAt', 'updatedAt', 'updatedBy'
+        ])
+        && data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 160
+        && data.singer is string
+        && data.singer.size() > 0
+        && data.singer.size() <= 160
+        && data.chordUrl is string
+        && data.chordUrl.size() <= 2048
+        && data.chordUrl.matches('https://.+')
+        && data.beat in ['4/4', '3/4', '2/4', '6/8']
+        && data.position is int
+        && data.position >= 0
+        && data.favorite is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && data.updatedBy is string
+        && data.updatedBy == request.auth.uid;
+    }
+
+    match /songs/{songId} {
+      allow read: if true;
+      allow create: if signedIn() && validSong(request.resource.data);
+      allow update: if signedIn()
+        && validSong(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if signedIn();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
