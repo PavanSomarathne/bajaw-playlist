@@ -155,7 +155,6 @@ function renderAuth() {
   elements.auth.setAttribute("aria-label", signedIn ? "Sign out" : "Sign in with Google");
   elements.auth.title = signedIn ? `Signed in as ${currentUser.displayName || currentUser.email}` : "Sign in with Google";
   elements.authLabel.textContent = signedIn ? (currentUser.displayName?.split(" ")[0] || "Sign out") : "Sign in";
-  elements.add.disabled = !signedIn;
   elements.add.title = signedIn ? "Add song" : "Sign in to add songs";
 }
 
@@ -289,6 +288,7 @@ async function reorderSongs(fromId, toId) {
 async function handleSignIn() {
   if (!auth) return;
   if (currentUser) {
+    if (!window.confirm("Are you sure you want to sign out?")) return;
     try {
       await signOut(auth);
       showToast("Signed out.");
@@ -377,8 +377,12 @@ function initializeFirebase() {
 elements.search.addEventListener("input", render);
 elements.filter.addEventListener("change", render);
 elements.auth.addEventListener("click", handleSignIn);
-elements.add.addEventListener("click", () => {
-  if (requireEditor()) elements.dialog.showModal();
+elements.add.addEventListener("click", async () => {
+  if (!currentUser) {
+    if (window.confirm("Sign in with Google to add a song?")) await handleSignIn();
+    return;
+  }
+  elements.dialog.showModal();
 });
 $("#close").addEventListener("click", () => elements.dialog.close());
 $("#cancel").addEventListener("click", () => elements.dialog.close());
