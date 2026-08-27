@@ -186,10 +186,13 @@ function render() {
           <span class="beat">${escapeHtml(song.beat)}</span>
           <span class="source">${escapeHtml(sourceLabel(song.chordUrl))}</span>
         </div>
-        <button class="favorite ${song.favorite ? "active" : ""}" data-favorite="${song.id}" ${canEdit ? "" : "disabled"} aria-label="${canEdit ? "Toggle favorite" : "Sign in to change favorites"}" aria-pressed="${song.favorite}">${icons.heart}</button>
+        <button class="favorite favorite-card ${song.favorite ? "active" : ""}" data-favorite="${song.id}" ${canEdit ? "" : "disabled"} aria-label="${canEdit ? "Toggle favorite" : "Sign in to change favorites"}" aria-pressed="${song.favorite}">${icons.heart}</button>
       </div>
       <div class="song-copy">
-        <h3 class="song-title">${escapeHtml(song.title)}</h3>
+        <div class="song-heading">
+          <h3 class="song-title">${escapeHtml(song.title)}</h3>
+          <button class="favorite favorite-list ${song.favorite ? "active" : ""}" data-favorite="${song.id}" ${canEdit ? "" : "disabled"} aria-label="${canEdit ? "Toggle favorite" : "Sign in to change favorites"}" aria-pressed="${song.favorite}">${icons.heart}</button>
+        </div>
         <p class="song-meta"><span class="singer">${escapeHtml(song.singer)}</span></p>
       </div>
       <div class="card-actions">
