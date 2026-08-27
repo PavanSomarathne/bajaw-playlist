@@ -43,8 +43,6 @@ const elements = {
   grid: $("#grid"),
   result: $("#result"),
   search: $("#search"),
-  songCount: $("#songs"),
-  sourceCount: $("#sources"),
   status: $("#appStatus"),
   toast: $("#toast"),
 };
@@ -199,8 +197,6 @@ function render() {
   elements.result.textContent = shown.length === songs.length
     ? `${songs.length} ${songs.length === 1 ? "song" : "songs"}${canEdit && songs.length ? " · Drag to reorder" : ""}`
     : `${shown.length} of ${songs.length} songs`;
-  elements.songCount.textContent = songs.length;
-  elements.sourceCount.textContent = new Set(songs.map((song) => domain(song.chordUrl))).size;
 }
 
 function requireEditor() {
