@@ -38,7 +38,6 @@ const elements = {
   empty: $("#empty"),
   emptyTitle: $("#emptyTitle"),
   emptyText: $("#emptyText"),
-  favoriteCount: $("#favs"),
   filter: $("#filter"),
   form: $("#form"),
   grid: $("#grid"),
@@ -53,7 +52,6 @@ const elements = {
 const icons = {
   arrow: '<svg viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg>',
   grip: '<svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1" fill="currentColor"/><circle cx="15" cy="6" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="18" r="1" fill="currentColor"/><circle cx="15" cy="18" r="1" fill="currentColor"/></svg>',
-  heart: '<svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>',
   trash: '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M8 11v6M12 11v6M16 11v6M6 7l1 14h10l1-14"/></svg>',
 };
 
@@ -143,7 +141,6 @@ function visibleSongs() {
       .toLowerCase()
       .includes(search);
     const matchesFilter = filter === "all"
-      || (filter === "favorites" && song.favorite)
       || (filter.startsWith("beat:") && song.beat === filter.slice(5));
     return matchesSearch && matchesFilter;
   });
@@ -186,13 +183,9 @@ function render() {
           <span class="beat">${escapeHtml(song.beat)}</span>
           <span class="source">${escapeHtml(sourceLabel(song.chordUrl))}</span>
         </div>
-        <button class="favorite favorite-card ${song.favorite ? "active" : ""}" data-favorite="${song.id}" ${canEdit ? "" : "disabled"} aria-label="${canEdit ? "Toggle favorite" : "Sign in to change favorites"}" aria-pressed="${song.favorite}">${icons.heart}</button>
       </div>
       <div class="song-copy">
-        <div class="song-heading">
-          <h3 class="song-title">${escapeHtml(song.title)}</h3>
-          <button class="favorite favorite-list ${song.favorite ? "active" : ""}" data-favorite="${song.id}" ${canEdit ? "" : "disabled"} aria-label="${canEdit ? "Toggle favorite" : "Sign in to change favorites"}" aria-pressed="${song.favorite}">${icons.heart}</button>
-        </div>
+        <h3 class="song-title">${escapeHtml(song.title)}</h3>
         <p class="song-meta"><span class="singer">${escapeHtml(song.singer)}</span></p>
       </div>
       <div class="card-actions">
@@ -207,7 +200,6 @@ function render() {
     ? `${songs.length} ${songs.length === 1 ? "song" : "songs"}${canEdit && songs.length ? " · Drag to reorder" : ""}`
     : `${shown.length} of ${songs.length} songs`;
   elements.songCount.textContent = songs.length;
-  elements.favoriteCount.textContent = songs.filter((song) => song.favorite).length;
   elements.sourceCount.textContent = new Set(songs.map((song) => domain(song.chordUrl))).size;
 }
 
@@ -215,22 +207,6 @@ function requireEditor() {
   if (currentUser) return true;
   showToast("Sign in with Google to edit the playlist.");
   return false;
-}
-
-async function toggleFavorite(songId) {
-  if (!requireEditor()) return;
-  const song = songs.find((item) => item.id === songId);
-  if (!song) return;
-
-  try {
-    await updateDoc(doc(db, "songs", songId), {
-      favorite: !song.favorite,
-      updatedAt: serverTimestamp(),
-      updatedBy: currentUser.uid,
-    });
-  } catch (error) {
-    showToast(errorMessage(error, "Could not update the favorite."));
-  }
 }
 
 async function removeSong(songId) {
@@ -425,7 +401,6 @@ elements.form.addEventListener("submit", async (event) => {
       beat,
       chordUrl,
       createdAt: serverTimestamp(),
-      favorite: false,
       position: maxPosition + POSITION_STEP,
       singer,
       title,
@@ -445,11 +420,6 @@ elements.form.addEventListener("submit", async (event) => {
 });
 
 elements.grid.addEventListener("click", (event) => {
-  const favorite = event.target.closest("[data-favorite]");
-  if (favorite) {
-    toggleFavorite(favorite.dataset.favorite);
-    return;
-  }
   const remove = event.target.closest("[data-delete]");
   if (remove) removeSong(remove.dataset.delete);
 });

@@ -8,7 +8,7 @@ service cloud.firestore {
 
     function validSong(data) {
       return data.keys().hasAll([
-          'title', 'singer', 'chordUrl', 'beat', 'position', 'favorite',
+          'title', 'singer', 'chordUrl', 'beat', 'position',
           'createdAt', 'updatedAt', 'updatedBy'
         ])
         && data.keys().hasOnly([
@@ -27,7 +27,7 @@ service cloud.firestore {
         && data.beat in ['4/4', '3/4', '2/4', '6/8']
         && data.position is int
         && data.position >= 0
-        && data.favorite is bool
+        && (!('favorite' in data) || data.favorite is bool)
         && data.createdAt is timestamp
         && data.updatedAt is timestamp
         && data.updatedBy is string
